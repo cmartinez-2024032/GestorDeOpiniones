@@ -1,56 +1,53 @@
 'use strict';
 
-import mongoose from 'mongoose';
+import { Sequelize } from 'sequelize';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+export const sequelize = new Sequelize(
+    process.env.DB_NAME,
+    process.env.DB_USER,
+    process.env.DB_PASS,
+    {
+        host: process.env.DB_HOST,
+        port: process.env.DB_PORT || 5432,
+        dialect: 'postgres',
+        logging: false,
+        pool: {
+            max: 10,
+            min: 0,
+            acquire: 30000,
+            idle: 10000,
+        },
+    }
+);
+
 
 export const dbConnection = async () => {
     try {
-        mongoose.connection.on('error', () => {
-            console.log('MongoDB | Error connecting to MongoDB');
-            mongoose.disconnect();
-        });
+        console.log('PostgreSQL | Connecting to PostgreSQL...');
 
-        mongoose.connection.on('connecting', () => {
-            console.log('MongoDB | Connecting to MongoDB...');
-        });
+        await sequelize.authenticate();
 
-        mongoose.connection.on('connected', () => {
-            console.log('MongoDB | Connected to MongoDB');
-        });
-
-        mongoose.connection.on('open', () => {
-            console.log('MongoDB | Connected to gestor_opiniones database');
-        });
-
-        mongoose.connection.on('reconnected', () => {
-            console.log('MongoDB | Reconnecting to MongoDB');
-        });
-
-        mongoose.connection.on('disconnected', () => {
-            console.log('MongoDB | Disconnected from MongoDB');
-        });
-
-        await mongoose.connect(process.env.MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
-            maxPoolSize: 10
-        });
+        console.log('PostgreSQL | Connected to PostgreSQL');
+        console.log(`PostgreSQL | Connected to ${process.env.DB_NAME} database`);
 
     } catch (error) {
-        console.error(`MongoDB | Connection error: ${error.message}`);
+        console.error(`PostgreSQL | Connection error: ${error.message}`);
         process.exit(1);
     }
 };
 
-/* ================================
-   GRACEFUL SHUTDOWN
-================================ */
+
 const gracefulShutdown = async (signal) => {
-    console.log(`MongoDB | Received ${signal}. Closing connection...`);
+    console.log(`PostgreSQL | Received ${signal}. Closing connection...`);
     try {
-        await mongoose.connection.close();
-        console.log('MongoDB | Connection closed successfully');
+        await sequelize.close();
+        console.log('PostgreSQL | Connection closed successfully');
         process.exit(0);
     } catch (error) {
-        console.error('MongoDB | Error during shutdown:', error.message);
+        console.error('PostgreSQL | Error during shutdown:', error.message);
         process.exit(1);
     }
 };
