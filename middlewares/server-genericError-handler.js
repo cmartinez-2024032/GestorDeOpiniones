@@ -2,9 +2,7 @@
 
 import { randomUUID } from 'crypto';
 
-/* ================================
-   GLOBAL ERROR HANDLER
-================================ */
+
 export const errorHandler = (err, req, res, _next) => {
     console.error('Error:', err);
 
@@ -12,7 +10,6 @@ export const errorHandler = (err, req, res, _next) => {
     const timestamp = new Date().toISOString();
     const errorCode = err.errorCode || null;
 
-    /* ===== MONGOOSE VALIDATION ===== */
     if (err.name === 'ValidationError') {
         return res.status(400).json({
             success: false,
@@ -23,7 +20,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== INVALID OBJECT ID ===== */
     if (err.name === 'CastError') {
         return res.status(400).json({
             success: false,
@@ -34,7 +30,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== DUPLICATE KEY ===== */
     if (err.code === 11000) {
         const field = Object.keys(err.keyValue)[0];
         const value = err.keyValue[field];
@@ -48,7 +43,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== JWT ERRORS ===== */
     if (err.name === 'JsonWebTokenError') {
         return res.status(401).json({
             success: false,
@@ -69,7 +63,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== DB CONNECTION ===== */
     if (err.name === 'MongoNetworkError') {
         return res.status(503).json({
             success: false,
@@ -80,7 +73,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== CUSTOM ERROR ===== */
     if (err.status) {
         return res.status(err.status).json({
             success: false,
@@ -91,7 +83,6 @@ export const errorHandler = (err, req, res, _next) => {
         });
     }
 
-    /* ===== GENERIC ERROR ===== */
     return res.status(500).json({
         success: false,
         message: 'Internal server error',
@@ -101,9 +92,6 @@ export const errorHandler = (err, req, res, _next) => {
     });
 };
 
-/* ================================
-   404 NOT FOUND
-================================ */
 export const notFound = (req, res) => {
     const traceId = randomUUID();
     const timestamp = new Date().toISOString();
@@ -117,9 +105,6 @@ export const notFound = (req, res) => {
     });
 };
 
-/* ================================
-   ASYNC WRAPPER
-================================ */
 export const asyncHandler = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };

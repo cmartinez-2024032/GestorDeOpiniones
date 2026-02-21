@@ -1,10 +1,13 @@
 'use strict';
+
 import User from './user.model.js';
 import { encryptPassword, comparePassword } from '../../helpers/encrypt-password.js';
 
 export const getProfile = async (req, res, next) => {
     try {
-        const user = await User.findById(req.userId).select('-password');
+        const user = await User.findByPk(req.userId, {
+            attributes: { exclude: ['password'] },
+        });
 
         if (!user || !user.status) {
             return res.status(404).json({
@@ -26,7 +29,7 @@ export const updateProfile = async (req, res, next) => {
     try {
         const { username, email, name, password, newPassword } = req.body;
 
-        const user = await User.findById(req.userId);
+        const user = await User.findByPk(req.userId);
 
         if (!user || !user.status) {
             return res.status(404).json({

@@ -8,6 +8,7 @@ import {
     updatePost,
     deletePost,
 } from './post.controller.js';
+
 import { validateJWT } from '../../middlewares/validate-JWT.js';
 
 const router = Router();

@@ -31,7 +31,7 @@ export const validateJWT = async (req, res, next) => {
 
         const userId = decoded.uid || decoded.id;
 
-        const user = await User.findById(userId).populate('role');
+        const user = await User.findByPk(userId);
 
         if (!user) {
             return res.status(401).json({
@@ -48,7 +48,7 @@ export const validateJWT = async (req, res, next) => {
         }
 
         req.user = user;
-        req.userId = user._id;
+        req.userId = user.id;
         req.role = user.role || null;
 
         next();

@@ -1,15 +1,15 @@
 'use strict';
 
-import Post from './post.model.js';
+import { Post } from './post.model.js';
 import Comment from '../comments/coment.model.js';
-
+import User from '../users/user.model.js';
 export const createPost = async (req, res, next) => {
     try {
         const data = req.body;
 
         const post = await Post.create({
             ...data,
-            author: req.userId,
+            authorId: req.userId,
         });
 
         res.status(201).json({
@@ -22,12 +22,16 @@ export const createPost = async (req, res, next) => {
     }
 };
 
-
 export const getPosts = async (req, res, next) => {
     try {
-        const posts = await Post.find({ isActive: true })
-            .populate('author', 'username email')
-            .sort({ createdAt: -1 });
+        const posts = await Post.findAll({
+            where: { isActive: true },
+            include: {
+                model: User,
+                attributes: ['id', 'username', 'email'],
+            },
+            order: [['createdAt', 'DESC']],
+        });
 
         res.json({
             success: true,
@@ -38,13 +42,16 @@ export const getPosts = async (req, res, next) => {
     }
 };
 
-
 export const getPostById = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const post = await Post.findById(id)
-            .populate('author', 'username email');
+        const post = await Post.findByPk(id, {
+            include: {
+                model: User,
+                attributes: ['id', 'username', 'email'],
+            },
+        });
 
         if (!post || !post.isActive) {
             return res.status(404).json({
@@ -66,7 +73,7 @@ export const updatePost = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const post = await Post.findById(id);
+        const post = await Post.findByPk(id);
 
         if (!post || !post.isActive) {
             return res.status(404).json({
@@ -75,15 +82,14 @@ export const updatePost = async (req, res, next) => {
             });
         }
 
-        if (post.author.toString() !== req.userId) {
+        if (post.authorId !== req.userId) {
             return res.status(403).json({
                 success: false,
                 message: 'No puedes editar este post',
             });
         }
 
-        Object.assign(post, req.body);
-        await post.save();
+        await post.update(req.body);
 
         res.json({
             success: true,
@@ -99,7 +105,7 @@ export const deletePost = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const post = await Post.findById(id);
+        const post = await Post.findByPk(id);
 
         if (!post || !post.isActive) {
             return res.status(404).json({
@@ -108,19 +114,18 @@ export const deletePost = async (req, res, next) => {
             });
         }
 
-        if (post.author.toString() !== req.userId) {
+        if (post.authorId !== req.userId) {
             return res.status(403).json({
                 success: false,
                 message: 'No puedes eliminar este post',
             });
         }
 
-        post.isActive = false;
-        await post.save();
+        await post.update({ isActive: false });
 
-        await Comment.updateMany(
-            { post: post._id },
-            { isActive: false }
+        await Comment.update(
+            { isActive: false },
+            { where: { postId: id } }
         );
 
         res.json({

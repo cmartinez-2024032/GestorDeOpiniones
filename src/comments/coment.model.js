@@ -1,18 +1,43 @@
 'use strict';
 
-import mongoose from 'mongoose';
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../../configs/db.js';
 
-const { Schema, model, Types } = mongoose;
 
-const commentSchema = new Schema(
+const Comment = sequelize.define(
+    'Comment',
     {
-        content: { type: String, required: true },
-        user: { type: Types.ObjectId, ref: 'User', required: true },
-        post: { type: Types.ObjectId, ref: 'Post', required: true },
-        status: { type: Boolean, default: true },
+        id: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+            primaryKey: true
+        },
+
+        content: {
+            type: DataTypes.STRING,
+            allowNull: false
+        },
+
+        userId: {
+            type: DataTypes.UUID,
+            allowNull: false,
+            field: 'user_id'
+        },
+
+        postId: {
+            type: DataTypes.INTEGER,
+            allowNull: false,
+            field: 'post_id'
+        },
+
+        status: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+        }
     },
-    { timestamps: true }
+    {
+        tableName: 'comments'
+    }
 );
 
-export default model('Comment', commentSchema);
-
+export default Comment;
